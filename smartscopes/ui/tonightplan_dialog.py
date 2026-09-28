@@ -3,7 +3,7 @@ Site and field of view; the first two are ticked, the user adjusts, and
 the ticked ones become back-to-back programs in the queue."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from nicegui import run, ui
@@ -125,7 +125,7 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
         if not chosen:
             ui.notify("Tick at least one target", type="warning")
             return
-        slots = tp.schedule(chosen)
+        slots = tp.schedule(chosen, not_before=datetime.now().astimezone() + timedelta(minutes=2))
         dropped = {c.id for c in chosen} - {c.id for c, _, _ in slots}
         for c, start, end in slots:
             t = c.target
@@ -138,7 +138,14 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
                 end_time=local_end.strftime("%H:%M"), auto_focus=af.value,
                 lp_filter=driver.supports(C.LP_FILTER) and ("dual" in fr or "narrowband" in fr),
             )
-            program["command"]["id_command"]["description"] = f"{c.label} ({t['visual_impact']}, TonightPlan)"
+            idc = program["command"]["id_command"]
+            idc["description"] = c.label
+            idc["tonightplan"] = {
+                "visual_impact": t["visual_impact"], "smart_scope": t.get("smart_scope"),
+                "imaging_time": t.get("imaging_time"), "fit": _FIT_TEXT[c.fit],
+                "peak_alt": c.peak_alt, "peak_time": f"{c.peak_time.astimezone(state['tz']):%H:%M}",
+                "moon_status": c.moon_status, "url": tp.SITE_URL,
+            }
             save_to_todo(device.uid, program)
         entry = device.entry
         entry.options["tonightplan_sky"] = sky_sel.value

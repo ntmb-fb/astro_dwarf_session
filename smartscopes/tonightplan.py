@@ -387,13 +387,14 @@ def rank_tonight(
 _MIN_SLOT = timedelta(minutes=30)
 
 
-def schedule(selected: list[Candidate]) -> list[tuple[Candidate, datetime, datetime]]:
+def schedule(selected: list[Candidate], not_before: datetime | None = None) -> list[tuple[Candidate, datetime, datetime]]:
     """Back-to-back slots in transit order: each target gets its own
     window, split from the next one halfway between their transits.
-    Targets left with less than 30 minutes are dropped."""
+    Nothing starts before `not_before` (normally "now", when planning
+    mid-night). Targets left with less than 30 minutes are dropped."""
     ordered = sorted(selected, key=lambda c: c.peak_time)
     slots: list[tuple[Candidate, datetime, datetime]] = []
-    cursor: datetime | None = None
+    cursor: datetime | None = not_before
     for i, c in enumerate(ordered):
         start = max(c.window_start, cursor) if cursor else c.window_start
         end = c.window_end

@@ -101,3 +101,11 @@ def test_schedule_drops_target_without_room():
     squeezed = _cand("b", 0, 4.2, 4.1)      # same transit, leaves < 30 min
     ids = [c.id for c, _, _ in tp.schedule([a, squeezed])]
     assert len(ids) == 1
+
+
+def test_schedule_never_starts_in_the_past():
+    a, b = _cand("early", 0, 6, 2), _cand("late", 2, 10, 6)
+    now = a.window_start + timedelta(hours=3)          # planning mid-night
+    slots = tp.schedule([a, b], not_before=now)
+    assert all(start >= now for _, start, _ in slots)
+    assert slots[0][0].id == "early" and slots[0][1] == now

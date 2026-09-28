@@ -155,6 +155,7 @@ def test_program_file_runs_to_done(tmp_path, monkeypatch):
     assert {"stack_lenhance": True} in [m["params"] for m in fake.received if m["method"] == "set_setting"]
     assert any("Calibration: not supported" in text for _, text in state.steps)
     assert state.frames >= 3
+    assert done["command"]["id_command"]["shots_stacked"] >= 3
 
 
 def test_program_stop_moves_to_error(tmp_path, monkeypatch):
@@ -179,3 +180,20 @@ def test_program_stop_moves_to_error(tmp_path, monkeypatch):
         fake.close()
     assert state.success is False and "Stopped" in state.message
     assert os.path.exists(os.path.join(dirs["ERROR_DIR"], "x.json"))
+
+
+def test_describe_shows_plan_settings_and_end_time():
+    # Needs the upstream app stack (program template); the app imports
+    # dwarf_python_api first, which avoids a circular import inside it.
+    pytest.importorskip("dwarf_python_api.lib.dwarf_session")
+    from smartscopes.programs import describe, new_program
+
+    program = new_program(target="M2", ra=21.558, dec=-0.82, start=datetime(2026, 9, 28, 22, 57, 51),
+                          exposure_s=10, gain=80, count=0, end_time="01:12", lp_filter=True)
+    program["command"]["id_command"]["tonightplan"] = {
+        "visual_impact": "Showstopper", "peak_alt": 35.3, "peak_time": "22:17", "fit": "fits",
+        "smart_scope": "Excellent", "imaging_time": "<= 1h", "moon_status": "good"}
+    info = describe(program)
+    assert info["when"] == "2026-09-28 22:57–01:12"          # end rolls past midnight
+    assert info["plan"] == "Showstopper · peak 35° at 22:17 · fits · smart scope: Excellent · suggested <= 1h"
+    assert info["settings"] == "10s until stop time · gain 80 · LP filter · autofocus · RA 21.558h Dec -0.82°"

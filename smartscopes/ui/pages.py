@@ -16,7 +16,7 @@ from smartscopes import store
 from smartscopes.base import Capability as C, CaptureSettings, DriverError, ScopeEntry
 from smartscopes.coords import parse_dec_deg, parse_ra_hours
 from smartscopes.manager import ScopeDevice, get_scope_manager
-from smartscopes.programs import list_programs, new_program, save_to_todo
+from smartscopes.programs import describe, list_programs, new_program, save_to_todo
 from smartscopes.registry import all_models, get_driver_class
 
 
@@ -288,18 +288,28 @@ def _program_panel(device: ScopeDevice) -> None:
 
         @ui.refreshable
         def queue() -> None:
-            for label, folder in (("Queue", "TODO_DIR"), ("Done", "DONE_DIR"), ("Failed", "ERROR_DIR")):
+            sections = (("Running", "CURRENT_DIR"), ("Queue", "TODO_DIR"), ("Done", "DONE_DIR"), ("Failed", "ERROR_DIR"))
+            for label, folder in sections:
                 items = list_programs(uid, folder)[:10]
                 if not items:
                     continue
                 ui.label(label).classes("text-sm text-grey-7 mt-2")
                 for path, program in items:
-                    idc = program.get("command", {}).get("id_command", {})
-                    with ui.row().classes("items-center w-full gap-2"):
-                        ui.label(f"{idc.get('date', '')} {idc.get('time', '')[:5]}").classes("text-xs w-28")
-                        ui.label(idc.get("description") or os.path.basename(path)).classes("grow")
-                        if folder != "TODO_DIR" and idc.get("message"):
-                            ui.label(idc["message"]).classes("text-xs text-grey-6")
+                    info = describe(program)
+                    with ui.row().classes("items-start w-full gap-2 no-wrap"):
+                        with ui.column().classes("gap-0 grow"):
+                            with ui.row().classes("items-baseline gap-2"):
+                                ui.label(info["when"]).classes("text-xs text-grey-7")
+                                ui.label(info["title"] or os.path.basename(path)).classes("text-sm")
+                            if info["plan"]:
+                                with ui.row().classes("items-center gap-1"):
+                                    ui.icon("auto_awesome", size="xs").classes("text-amber-8")
+                                    ui.label(info["plan"]).classes("text-xs")
+                            if info["settings"]:
+                                ui.label(info["settings"]).classes("text-xs text-grey-7")
+                            if folder in ("DONE_DIR", "ERROR_DIR") and info["outcome"]:
+                                ui.label(info["outcome"]).classes(
+                                    "text-xs " + ("text-positive" if folder == "DONE_DIR" else "text-negative"))
                         if folder == "TODO_DIR":
                             def run_now(p=path) -> None:
                                 try:
@@ -316,6 +326,8 @@ def _program_panel(device: ScopeDevice) -> None:
                             ui.button(icon="delete", on_click=delete).props("flat round dense")
 
         queue()
+        # The scheduler moves files ToDo -> Current -> Done/Error in the background.
+        ui.timer(10.0, queue.refresh)
 
 
 def _run_panel(device: ScopeDevice) -> None:

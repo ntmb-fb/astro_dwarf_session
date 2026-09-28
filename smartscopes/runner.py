@@ -251,6 +251,8 @@ def run_program_file(
     finally:
         state.finished = True
         state.log(state.message)
+        if state.frames_target or state.frames:
+            id_command["shots_stacked"] = state.frames  # same field the Dwarf runner writes
         id_command.update(
             process="done",
             result=bool(state.success),
