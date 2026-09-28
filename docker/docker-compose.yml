@@ -7,7 +7,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     # Or use the prebuilt image instead of building (see README):
-    # image: ghcr.io/ntmb-fb/smartscope-session:latest
+    # image: <docker-hub-user>/smartscope-session:latest
     container_name: smartscope-session
     restart: unless-stopped
     # Host networking: the app needs the NAS's real LAN address (Watch QR

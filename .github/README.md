@@ -49,16 +49,15 @@ Running the app on an always-on box means scheduled sessions don't depend on you
 
 **Synology with the ready-made image (easiest):**
 
-GitHub builds a ready-made image for Intel/AMD and ARM NASes on every update: `ghcr.io/ntmb-fb/smartscope-session:latest`.
+GitHub builds a ready-made image for Intel/AMD and ARM NASes on every update and publishes it on Docker Hub as `<docker-hub-user>/smartscope-session` (see [Publishing the image](#publishing-the-image)).
 
-1. **Add the registry, once:** Container Manager → **Registry** → **Settings** → **Add**, URL `https://ghcr.io`. No login needed.
-2. **Download:** select that registry, search `ntmb-fb/smartscope-session`, and download tag `latest`.
-3. **Create the container:** Container Manager → **Image** → select it → **Run**:
+1. **Download:** Container Manager → **Registry** → search `smartscope-session` → select `<docker-hub-user>/smartscope-session` → **Download**, tag `latest`.
+2. **Create the container:** Container Manager → **Image** → select it → **Run**:
    - **Network:** `host`
    - **Environment:** `TZ` = your time zone (e.g. `Europe/Copenhagen`). Optionally `PORT` (default **8765**) if that port is taken.
    - **Volume:** a NAS folder, e.g. `/docker/smartscope-session/data`, mounted to `/data`
    - **Auto-restart:** on
-4. **Open** `http://<nas-ip>:8765`.
+3. **Open** `http://<nas-ip>:8765`.
 
 **Updating:** when Container Manager shows an update for the image, download it, then stop the container and choose **Action → Reset** (or re-create it with the same settings). Your data folder is kept.
 
@@ -84,6 +83,15 @@ docker compose -f docker/docker-compose.yml up -d --build
 - **Pairing a Dwarf:** Bluetooth pairing isn't available in a container. Use the **Wi-Fi icon** (manual setup) with the IP and UID shown in the DwarfLab app.
 - **Seestar key:** put your `.pem` file in `docker/data/` and enter `/data/<file>.pem` as its path in the telescope's settings.
 - **Desktop window:** the container runs as a server only; there's no desktop window. Use a browser, or install the app on your phone (HTTPS for phones).
+
+### Publishing the image
+
+The [Docker image workflow](workflows/docker-image.yml) runs on every push to `smartscope`. It builds the image, starts it and checks the dashboard loads, then pushes it (Intel/AMD + ARM) to Docker Hub. It needs two repository secrets (**Settings → Secrets and variables → Actions**):
+
+| Secret | Value |
+|---|---|
+| `DOCKERHUB_USERNAME` | your Docker Hub username |
+| `DOCKERHUB_TOKEN` | a Docker Hub personal access token with **Read & Write** permission |
 
 ## Quick start
 
