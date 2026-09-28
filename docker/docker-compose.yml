@@ -15,7 +15,7 @@ services:
     network_mode: host
     environment:
       TZ: Europe/Copenhagen   # your time zone - programs start on local clock time
-      PORT: "8080"            # web UI: http://<nas-ip>:8080
+      PORT: "8765"            # web UI: http://<nas-ip>:8765 (change if taken)
       # SMARTSCOPE_HTTPS_PORT: "8443"
     volumes:
       - ./data:/data          # devices, Sites, program queues, logs, certificates

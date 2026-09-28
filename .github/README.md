@@ -47,12 +47,27 @@ Running the app on an always-on box means scheduled sessions don't depend on you
 - **NAS:** Docker, e.g. a **Synology** with **Container Manager** (DSM 7.2+). That means an Intel/AMD (x86-64) or 64-bit ARM model; check Synology's Container Manager compatibility list for yours.
 - **Telescopes:** on the **same Wi-Fi network as the NAS** (station mode). A NAS can't join a telescope's own hotspot.
 
-**Synology, step by step:**
+**Synology with the ready-made image (easiest):**
+
+GitHub builds a ready-made image for Intel/AMD and ARM NASes on every update: `ghcr.io/ntmb-fb/smartscope-session:latest`.
+
+1. **Add the registry, once:** Container Manager → **Registry** → **Settings** → **Add**, URL `https://ghcr.io`. No login needed.
+2. **Download:** select that registry, search `ntmb-fb/smartscope-session`, and download tag `latest`.
+3. **Create the container:** Container Manager → **Image** → select it → **Run**:
+   - **Network:** `host`
+   - **Environment:** `TZ` = your time zone (e.g. `Europe/Copenhagen`). Optionally `PORT` (default **8765**) if that port is taken.
+   - **Volume:** a NAS folder, e.g. `/docker/smartscope-session/data`, mounted to `/data`
+   - **Auto-restart:** on
+4. **Open** `http://<nas-ip>:8765`.
+
+**Updating:** when Container Manager shows an update for the image, download it, then stop the container and choose **Action → Reset** (or re-create it with the same settings). Your data folder is kept.
+
+**Synology, building from source instead:**
 
 1. Download this repo as a ZIP (green **Code** button → *Download ZIP*) and unpack it with File Station into e.g. `/docker/smartscope-session`. Or use `git clone` over SSH, which makes updates easier.
 2. Open `docker/docker-compose.yml` and set `TZ` to your time zone (e.g. `Europe/Copenhagen`). Programs start by local clock time, so this matters.
 3. Container Manager → **Project** → **Create**. Name it `smartscope-session`, set the path to the repo's **`docker`** folder, and choose *Use existing docker-compose.yml*. Then build and start.
-4. Open `http://<nas-ip>:8080`.
+4. Open `http://<nas-ip>:8765`.
 
 **Anywhere else with Docker:**
 
@@ -65,7 +80,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 - **Data:** all app data (telescopes, Sites, program queues, logs, HTTPS certificates) lives in `docker/data/`. Back it up, and keep it when updating.
 - **Updating:** replace the code (or `git pull`), then in Container Manager open the project → **Action** → **Build**. Your data folder is untouched.
 - **Host networking:** the container uses the NAS's own network (`network_mode: host`), so the app knows its real LAN address for the Watch QR code and HTTPS. It also reaches your telescopes directly.
-- **Ports:** web UI on **8080**. Change with `PORT`; HTTPS for phones is on 8443 (`SMARTSCOPE_HTTPS_PORT`). If the NAS firewall is on, allow them.
+- **Ports:** web UI on **8765**. Change with `PORT` if something else uses it; HTTPS for phones is on 8443 (`SMARTSCOPE_HTTPS_PORT`). If the NAS firewall is on, allow them.
 - **Pairing a Dwarf:** Bluetooth pairing isn't available in a container. Use the **Wi-Fi icon** (manual setup) with the IP and UID shown in the DwarfLab app.
 - **Seestar key:** put your `.pem` file in `docker/data/` and enter `/data/<file>.pem` as its path in the telescope's settings.
 - **Desktop window:** the container runs as a server only; there's no desktop window. Use a browser, or install the app on your phone (HTTPS for phones).

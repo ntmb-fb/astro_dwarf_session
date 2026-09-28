@@ -1,0 +1,100 @@
+# Builds the Smartscope Session image for Intel/AMD and ARM NASes and publishes it:
+#   * always to GitHub's registry:  ghcr.io/<owner>/smartscope-session
+#   * also to Docker Hub when the repository secrets DOCKERHUB_USERNAME and
+#     DOCKERHUB_TOKEN are set:     docker.io/<DOCKERHUB_USERNAME>/smartscope-session
+name: Docker image
+
+on:
+  push:
+    branches: [smartscope]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    if: github.repository != 'stevejcl/astro_dwarf_session'
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Image names
+        id: names
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          images="ghcr.io/${owner}/smartscope-session"
+          if [ -n "$DOCKERHUB_USERNAME" ]; then
+            images="${images}"$'\n'"docker.io/${DOCKERHUB_USERNAME,,}/smartscope-session"
+          fi
+          { echo "images<<EOF"; echo "$images"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ steps.names.outputs.images }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=Smartscope Session
+            org.opencontainers.image.description=Automated imaging sessions for DWARF and ZWO Seestar smart telescopes
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      # Smoke test: build for this runner, start it, and load the dashboard.
+      - name: Build test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          tags: smartscope-session:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          docker run -d --name smoke --network host -e PORT=18765 smartscope-session:test
+          for i in $(seq 1 30); do
+            if curl -fs -o /dev/null http://127.0.0.1:18765/; then
+              curl -fs http://127.0.0.1:18765/ | grep -q "<title>Smartscope Session</title>" && echo "dashboard OK" && exit 0
+            fi
+            sleep 2
+          done
+          docker logs smoke
+          exit 1
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        if: env.DOCKERHUB_USERNAME != ''
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push (amd64 + arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
