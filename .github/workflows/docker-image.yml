@@ -59,6 +59,7 @@ jobs:
             exit 1
           fi
           echo "IMAGE=docker.io/${DOCKERHUB_USERNAME,,}/smartscope-session" >> "$GITHUB_ENV"
+          echo "IMAGE_REPO=${DOCKERHUB_USERNAME,,}/smartscope-session" >> "$GITHUB_ENV"
 
       - uses: docker/metadata-action@v5
         id: meta
@@ -90,3 +91,18 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Docker Hub page: short description + overview from docker/DOCKERHUB.md.
+      # Needs a token with Read, Write, Delete access; never blocks publishing.
+      - name: Prepare Docker Hub overview
+        run: sed "s|<this-image>|${IMAGE#docker.io/}|g" docker/DOCKERHUB.md > "$RUNNER_TEMP/DOCKERHUB.md"
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v5
+        continue-on-error: true
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE_REPO }}
+          short-description: "Automated imaging for DWARF & ZWO Seestar smart telescopes: web dashboard, scheduler, TonightPlan"
+          readme-filepath: ${{ runner.temp }}/DOCKERHUB.md
