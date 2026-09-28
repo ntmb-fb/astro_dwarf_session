@@ -1,0 +1,21 @@
+# Smartscope Session on a NAS / home server.
+# Synology: Container Manager -> Project -> Create, point it at this folder.
+# Elsewhere:  docker compose -f docker/docker-compose.yml up -d --build
+services:
+  smartscope:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    # Or use the prebuilt image instead of building (see README):
+    # image: ghcr.io/ntmb-fb/smartscope-session:latest
+    container_name: smartscope-session
+    restart: unless-stopped
+    # Host networking: the app needs the NAS's real LAN address (Watch QR
+    # code, HTTPS certificate) and direct access to telescopes on the LAN.
+    network_mode: host
+    environment:
+      TZ: Europe/Copenhagen   # your time zone - programs start on local clock time
+      PORT: "8080"            # web UI: http://<nas-ip>:8080
+      # SMARTSCOPE_HTTPS_PORT: "8443"
+    volumes:
+      - ./data:/data          # devices, Sites, program queues, logs, certificates

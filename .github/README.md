@@ -28,7 +28,7 @@ python -m pip install -r requirements-local.txt --target .
 
 The last line installs the Dwarf control library (`dwarf_python_api`) into the project folder, as upstream requires. [`uv`](https://docs.astral.sh/uv/) works just as well (`uv venv`, `uv pip install ...`).
 
-> **Known issue in `dwarf_python_api` 3.1.1:** one of its files is saved in the wrong encoding and the app fails to start with `SyntaxError: Non-UTF-8 code ... websockets_testV2.py`. Until it's fixed upstream, convert it once after installing:
+> **Known issue in `dwarf_python_api` 3.1.1 on Python 3.14:** one of its files is saved in the wrong encoding, and Python 3.14 refuses to load it (`SyntaxError: Non-UTF-8 code ... websockets_testV2.py`). Python 3.10–3.13 are fine. On 3.14, convert it once after installing:
 > `iconv -f latin1 -t utf-8 dwarf_python_api/lib/websockets_testV2.py -o tmp && mv tmp dwarf_python_api/lib/websockets_testV2.py`
 
 Run it:
@@ -37,6 +37,38 @@ Run it:
 python astro_dwarf_ui.py              # desktop window
 python astro_dwarf_ui.py --no_native  # server only; open http://<pc-ip>:<port> from any device
 ```
+
+## Run it on a NAS or home server (Docker)
+
+Running the app on an always-on box means scheduled sessions don't depend on your PC being awake, and every phone or tablet on your network can reach it. The [`docker/`](../docker) folder has everything needed.
+
+**Requirements:**
+
+- **NAS:** Docker, e.g. a **Synology** with **Container Manager** (DSM 7.2+). That means an Intel/AMD (x86-64) or 64-bit ARM model; check Synology's Container Manager compatibility list for yours.
+- **Telescopes:** on the **same Wi-Fi network as the NAS** (station mode). A NAS can't join a telescope's own hotspot.
+
+**Synology, step by step:**
+
+1. Download this repo as a ZIP (green **Code** button → *Download ZIP*) and unpack it with File Station into e.g. `/docker/smartscope-session`. Or use `git clone` over SSH, which makes updates easier.
+2. Open `docker/docker-compose.yml` and set `TZ` to your time zone (e.g. `Europe/Copenhagen`). Programs start by local clock time, so this matters.
+3. Container Manager → **Project** → **Create**. Name it `smartscope-session`, set the path to the repo's **`docker`** folder, and choose *Use existing docker-compose.yml*. Then build and start.
+4. Open `http://<nas-ip>:8080`.
+
+**Anywhere else with Docker:**
+
+```sh
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+**Good to know:**
+
+- **Data:** all app data (telescopes, Sites, program queues, logs, HTTPS certificates) lives in `docker/data/`. Back it up, and keep it when updating.
+- **Updating:** replace the code (or `git pull`), then in Container Manager open the project → **Action** → **Build**. Your data folder is untouched.
+- **Host networking:** the container uses the NAS's own network (`network_mode: host`), so the app knows its real LAN address for the Watch QR code and HTTPS. It also reaches your telescopes directly.
+- **Ports:** web UI on **8080**. Change with `PORT`; HTTPS for phones is on 8443 (`SMARTSCOPE_HTTPS_PORT`). If the NAS firewall is on, allow them.
+- **Pairing a Dwarf:** Bluetooth pairing isn't available in a container. Use the **Wi-Fi icon** (manual setup) with the IP and UID shown in the DwarfLab app.
+- **Seestar key:** put your `.pem` file in `docker/data/` and enter `/data/<file>.pem` as its path in the telescope's settings.
+- **Desktop window:** the container runs as a server only; there's no desktop window. Use a browser, or install the app on your phone (HTTPS for phones).
 
 ## Quick start
 
@@ -117,6 +149,7 @@ tools/sync-upstream.sh --push    # ...and push both branches to GitHub
 - `smartscopes/`
 - `requirements-smartscopes.txt`
 - `tools/sync-upstream.sh`
+- `docker/` and `.dockerignore`
 - this README, in `.github/`, which GitHub shows instead of upstream's root `README.md`, left untouched
 
 Upstream files are changed in only four places, each marked `smartscopes hook`:
@@ -175,7 +208,7 @@ The dashboard, pages, program runner, scheduler and TonightPlan dialog pick it u
 To report to stevejcl:
 
 - **`dwarf_python_api/lib/dwarf_utils.py`, `parse_dec_to_float`:** the minus sign applies only to the degrees, so `-05:23:28` becomes −4.61° instead of −5.39°. It affects declinations entered as text; decimal values from the program editor are fine.
-- **`dwarf_python_api/lib/websockets_testV2.py`:** saved as Latin-1, so Python refuses to import it (workaround under [Install](#install)).
+- **`dwarf_python_api/lib/websockets_testV2.py`:** saved as Latin-1, so Python 3.14 refuses to import it (workaround under [Install](#install); the Docker image uses Python 3.12 and isn't affected).
 
 ## Credits
 
