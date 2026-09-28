@@ -238,6 +238,7 @@ To report to stevejcl:
 - **[astro_dwarf_session](https://github.com/stevejcl/astro_dwarf_session)** and **[dwarf_python_api](https://github.com/stevejcl/dwarf_python_api)** by stevejcl: the app this fork builds on (MIT).
 - **[seestar_alp](https://github.com/smart-underworld/seestar_alp):** the community's documentation of the Seestar protocol; the Seestar client here is an independent implementation.
 - **[TonightPlan](https://tonightplan.cosmiccaptures.com/)** by Tim Ciasto / Cosmic Captures: target ratings and notes, fetched live for personal use.
+- **Seestar pictures:** original 3D renders made with [Blender](https://www.blender.org/) (`tools/render_seestars.py`), not manufacturer photos.
 - **[Astronomy Engine](https://github.com/cosinekitty/astronomy)** by Don Cross (MIT): sun, Moon and target positions.
 
 MIT License, as upstream (see [LICENSE](../LICENSE)).
