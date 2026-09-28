@@ -18,7 +18,7 @@ def _qr(url: str) -> None:
 
 
 def build_https_page(target: Callable[[], tuple[str, int]]) -> None:
-    @ui.page("/scopes/https", title="HTTPS for phones")
+    @ui.page("/scopes/https", title="Smartscope Session - HTTPS for phones")
     def https_page() -> None:
         from smartscopes.ui.pages import _header
 

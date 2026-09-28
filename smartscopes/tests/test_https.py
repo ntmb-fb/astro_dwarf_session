@@ -90,3 +90,9 @@ def test_relay_forwards_bytes(cert_dir, monkeypatch):
         return reply
 
     assert asyncio.run(scenario()) == b"pong:ping\n"
+
+
+def test_ca_name_uses_app_name(cert_dir):
+    https.ensure_certificates(create_ca=True)
+    ca = x509.load_pem_x509_certificate((cert_dir / "ca.crt").read_bytes())
+    assert ca.subject.rfc4514_string().startswith("CN=Smartscope Session local CA")

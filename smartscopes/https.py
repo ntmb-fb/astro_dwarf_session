@@ -15,7 +15,7 @@ The CA is name-constrained to private IP ranges, localhost and *.local,
 so even a leaked CA key cannot be used to impersonate public websites
 on a phone that trusts it.
 
-Files live in ~/.astro_dwarf_session/https/ (override with the
+Files live in ~/.smartscope_session/https/ (override with the
 SMARTSCOPE_CERT_DIR environment variable), outside the git checkout.
 HTTPS is active only once the CA exists (see enable()).
 """
@@ -32,7 +32,13 @@ from pathlib import Path
 
 log = logging.getLogger("smartscopes.https")
 
-CERT_DIR = Path(os.environ.get("SMARTSCOPE_CERT_DIR", Path.home() / ".astro_dwarf_session" / "https"))
+def _default_cert_dir() -> Path:
+    new, old = Path.home() / ".smartscope_session" / "https", Path.home() / ".astro_dwarf_session" / "https"
+    # Keep using a CA created before the rename, so phones that trust it keep working.
+    return old if (old / "ca.crt").exists() and not new.exists() else new
+
+
+CERT_DIR = Path(os.environ.get("SMARTSCOPE_CERT_DIR") or _default_cert_dir())
 HTTPS_PORT = int(os.environ.get("SMARTSCOPE_HTTPS_PORT", "8443"))
 
 _CA_DAYS = 3650
@@ -98,7 +104,7 @@ def _create_ca() -> None:
 
     key = ec.generate_private_key(ec.SECP256R1())
     host = socket.gethostname().split(".")[0]
-    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"Astro Dwarf Session local CA ({host})")])
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"Smartscope Session local CA ({host})")])
     now = dt.datetime.now(dt.timezone.utc)
     permitted = [x509.IPAddress(ipaddress.ip_network(n)) for n in _PRIVATE_NETS]
     permitted += [x509.DNSName("localhost"), x509.DNSName("local")]

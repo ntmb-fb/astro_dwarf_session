@@ -82,7 +82,7 @@ def fetch_catalogue(*, force: bool = False) -> list[dict]:
             with open(_CACHE_PATH, encoding="utf-8") as f:
                 return json.load(f)
     request = urllib.request.Request(SITE_URL, headers={
-        "User-Agent": "astro_dwarf_session-smartscope (personal telescope planner)"})
+        "User-Agent": "smartscope-session (personal telescope planner)"})
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             html = response.read().decode("utf-8")

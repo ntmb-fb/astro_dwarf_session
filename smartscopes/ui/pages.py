@@ -364,13 +364,13 @@ def _run_panel(device: ScopeDevice) -> None:
 
 
 def build_pages() -> None:
-    @ui.page("/scopes/add", title="Add telescope")
+    @ui.page("/scopes/add", title="Smartscope Session - Add telescope")
     def add_page() -> None:
         _header("Add telescope")
         with ui.column().classes("w-full max-w-xl mx-auto gap-3 p-4"):
             _entry_form(None)
 
-    @ui.page("/scopes/{uid}/edit", title="Edit telescope")
+    @ui.page("/scopes/{uid}/edit", title="Smartscope Session - Edit telescope")
     def edit_page(uid: str) -> None:
         device = get_scope_manager().get(uid)
         _header("Edit telescope", back=f"/scopes/{uid}")
@@ -380,7 +380,7 @@ def build_pages() -> None:
                 return
             _entry_form(device.entry)
 
-    @ui.page("/scopes/{uid}", title="Telescope")
+    @ui.page("/scopes/{uid}", title="Smartscope Session - Telescope")
     def device_page(uid: str) -> None:
         device = get_scope_manager().get(uid)
         if device is None:

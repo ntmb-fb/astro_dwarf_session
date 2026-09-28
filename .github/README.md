@@ -1,4 +1,4 @@
-# Smartscope Sessions
+# Smartscope Session
 
 Automated imaging sessions for smart telescopes: **DWARF II / 3 / Mini** and **ZWO Seestar S50 / S30**, from one local web app on your PC, tablet or phone.
 
@@ -9,7 +9,7 @@ This is a fork of [stevejcl/astro_dwarf_session](https://github.com/stevejcl/ast
 - **HTTPS for phones**, so Android can install the app full-screen from its home screen.
 - A **driver interface** for adding other telescope brands later.
 
-The fork stays close to upstream and pulls in its updates regularly (see [Keeping up with upstream](#keeping-up-with-upstream)).
+The app shows itself as **Smartscope Session** (window, browser tabs, phone install name, dashboard). The fork stays close to upstream and pulls in its updates regularly (see [Keeping up with upstream](#keeping-up-with-upstream)).
 
 ---
 
@@ -18,8 +18,8 @@ The fork stays close to upstream and pulls in its updates regularly (see [Keepin
 Requires Python 3.10+ on Windows, macOS or Linux.
 
 ```sh
-git clone https://github.com/ntmb-fb/astro_dwarf_session.git smartscope-sessions
-cd smartscope-sessions
+git clone https://github.com/ntmb-fb/astro_dwarf_session.git smartscope-session
+cd smartscope-session
 python -m venv venv
 # Windows: venv\Scripts\activate      macOS/Linux: source venv/bin/activate
 python -m pip install -r requirements.txt -r requirements-smartscopes.txt
@@ -92,7 +92,7 @@ Android Chrome only installs web apps full-screen over HTTPS. On the dashboard, 
 
 The app creates its own small certificate authority for your network. The certificate is renewed automatically when your PC's IP changes, so each phone is set up only once. That authority is restricted to private network addresses and `.local` names, so it can't be misused for real websites. Plain HTTP and the desktop window keep working as before.
 
-- **Files:** stored in `~/.astro_dwarf_session/https/`. Change with `SMARTSCOPE_CERT_DIR`, and the port with `SMARTSCOPE_HTTPS_PORT`.
+- **Files:** stored in `~/.smartscope_session/https/`. Change with `SMARTSCOPE_CERT_DIR`, and the port with `SMARTSCOPE_HTTPS_PORT`.
 - **Firewall:** allow TCP 8443 if your PC runs one.
 
 ---
@@ -119,13 +119,16 @@ tools/sync-upstream.sh --push    # ...and push both branches to GitHub
 - `tools/sync-upstream.sh`
 - this README, in `.github/`, which GitHub shows instead of upstream's root `README.md`, left untouched
 
-Upstream files are changed in only three places, each marked `smartscopes hook`:
+Upstream files are changed in only four places, each marked `smartscopes hook`:
 
 | File | Hook | Adds |
 |---|---|---|
-| `astro_dwarf_ui.py` | `smartscopes.install()` | pages, scheduler, HTTPS |
+| `astro_dwarf_ui.py` | `smartscopes.install()` | pages, scheduler, HTTPS, app name |
 | `pages/dashboard.py` | `smartscopes.render_dashboard_section()` | the *Other smart telescopes* cards |
+| `pages/dashboard.py` | `smartscopes.brand_html()` | the *Smartscope Session* wordmark |
 | `pages/programs.py` | `smartscopes.dwarf_tonightplan_button()` | the ✨ button on Dwarf Programs pages |
+
+The app name itself is applied at startup by `smartscopes/branding.py`, which renames upstream's titles, window title and install name where they're used, so the ~14 "Astro Dwarf Session" strings in upstream code stay untouched.
 
 Keep it that way: new behavior belongs in `smartscopes/`. Generic fixes to upstream code are better sent to stevejcl as pull requests.
 
@@ -146,6 +149,7 @@ smartscopes/
 ├── tonightplan.py   TonightPlan catalogue fetch + port of its planning rules
 ├── plan_targets.py  per-scope adapters for the TonightPlan dialog (drivers, Dwarfs)
 ├── https.py         private CA + auto-renewed server certificate + TLS relay (port 8443)
+├── branding.py      "Smartscope Session" name applied at startup
 ├── ui/              dashboard section, /scopes/... pages, TonightPlan dialog, HTTPS setup
 └── tests/           fake Seestar TCP server + protocol, runner and planner tests
 ```

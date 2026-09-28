@@ -241,7 +241,7 @@ def build_dashboard_page() -> None:
                 ui.button(icon="qr_code_2", on_click=_open_watch_qr).props("flat round")
 
                 ui.html(
-                    'Dwarf<span style="color:#00c896">ium</span> Lite'
+                    __import__("smartscopes").brand_html()  # smartscopes hook: app name (fork addition)
                 ).classes(
                     "text-lg sm:text-2xl font-bold absolute right-0"
                 ).style(f"color:{logo_color}; font-variant-ligatures: none;")
