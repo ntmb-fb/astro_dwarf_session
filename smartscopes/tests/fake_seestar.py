@@ -45,11 +45,16 @@ class FakeSeestar:
                 pass
 
     def _accept(self) -> None:
-        try:
-            conn, _ = self._server.accept()
-        except OSError:
-            return
-        self._conn = conn
+        while True:  # one client at a time, but accept reconnects
+            try:
+                conn, _ = self._server.accept()
+            except OSError:
+                return
+            self._conn = conn
+            self.verified = False
+            self._serve(conn)
+
+    def _serve(self, conn: socket.socket) -> None:
         buf = b""
         while True:
             try:

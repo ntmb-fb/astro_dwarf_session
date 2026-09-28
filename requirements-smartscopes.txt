@@ -2,3 +2,4 @@
 # Kept separate from requirements.txt so upstream merges never conflict.
 cryptography   # Seestar firmware 7.18+ challenge signing
 tzlocal        # IANA time-zone name pushed to the Seestar
+astronomy-engine  # TonightPlan import: same astronomy library the site uses

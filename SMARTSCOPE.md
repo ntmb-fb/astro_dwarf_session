@@ -81,6 +81,40 @@ required by this firmware?)".
      It is off by default, as on the Dwarf side.
    - **Manual control**: goto, autofocus, start/stop stacking, park.
 
+### Tonight from TonightPlan
+
+**Tonight from TonightPlan** on a telescope's page builds tonight's
+target list from [TonightPlan](https://tonightplan.cosmiccaptures.com/), by
+Tim Ciasto / Cosmic Captures.
+
+- **Location:** the telescope's Site (latitude, longitude and time zone). You
+  can pick another Site in the dialog.
+- **Scope:** the model's field of view (Seestar S50: 44′ × 77′), used for the
+  site's own "fits / tight / needs mosaic" verdict.
+- **Your sky:** City, Suburban, Rural or Dark, remembered per telescope. It hides
+  targets that need darker skies, as on the site.
+- **Left out:**
+  - targets the site greys out because of the Moon ("not ideal")
+  - targets rated *Challenging* for smart telescopes
+  - anything that is out of season or spends less than 50 minutes above 20°
+- **Order:** Showstopper, then Rewarding, then the rest. Within each group it
+  follows the site's own score, with targets that need a mosaic placed last.
+- **Selection:** the first two are ticked. Tick more or others as you like;
+  *Add to queue* creates back-to-back programs in transit order. Each target's
+  slot ends halfway to the next target's transit, and a target left with less
+  than 30 minutes is dropped. The LP filter is switched on for targets the site
+  recommends a dual-band or narrowband filter for.
+
+TonightPlan has no API. The catalog is read from the page (cached for a day in
+`Devices_Sessions/`, never committed) and the site's planning rules are
+re-implemented with the same astronomy library it uses. The port was checked
+against the site's own JavaScript: identical results for all 221 targets on
+five different nights and locations. If the site changes its page layout, the
+dialog shows "catalogue not found" rather than guessing.
+
+Not available: the site's per-location skyline (tree or house obstructions),
+because that setting only lives in your browser.
+
 Program files use the upstream format and live in
 `Devices_Sessions/<telescope-id>/Astro_Sessions/{ToDo,Current,Done,Error}`.
 Two differences from the Dwarf runner:
@@ -131,6 +165,7 @@ smartscopes/
 ├── store.py         Devices_Sessions/smartscopes.json + per-device session folders
 ├── programs.py      build/list program files (reuses upstream's program template)
 ├── coords.py        RA/Dec parsing (decimal or sexagesimal)
+├── tonightplan.py   TonightPlan catalogue fetch + port of its planning rules
 ├── https.py         private CA + auto-renewed server cert + TLS relay (port 8443)
 ├── ui/              dashboard section + /scopes/... pages (incl. /scopes/https setup)
 └── tests/           fake Seestar TCP server + protocol/runner tests

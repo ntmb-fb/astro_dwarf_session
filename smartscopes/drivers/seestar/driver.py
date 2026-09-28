@@ -32,8 +32,10 @@ class SeestarDriver(ScopeDriver):
     protocol_display_name = "ZWO Seestar"
     default_port = DEFAULT_PORT
     models = {
-        "s50": ModelInfo("s50", "Seestar S50", _COMMON, exposures_s=(10, 20, 30), default_gain=80),
-        "s30": ModelInfo("s30", "Seestar S30", _COMMON, exposures_s=(10, 20, 30), default_gain=80),
+        "s50": ModelInfo("s50", "Seestar S50", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
+                         fov_arcmin=(44, 77)),
+        "s30": ModelInfo("s30", "Seestar S30", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
+                         fov_arcmin=(84, 148)),
     }
 
     option_fields = (

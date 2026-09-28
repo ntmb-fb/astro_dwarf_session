@@ -233,6 +233,12 @@ def _program_panel(device: ScopeDevice) -> None:
         ui.label("When armed, programs in the queue start automatically at their time. "
                  "Programs use the same file format as the Dwarf side.").classes("text-xs text-grey-6")
 
+        def open_tonightplan() -> None:
+            from smartscopes.ui.tonightplan_dialog import open_tonightplan_dialog
+            open_tonightplan_dialog(device, queue.refresh)
+
+        ui.button("Tonight from TonightPlan", icon="auto_awesome", on_click=open_tonightplan).props("flat")
+
         with ui.expansion("New program", icon="add").classes("w-full"):
             start = datetime.now() + timedelta(minutes=5)
             with ui.row().classes("gap-2 w-full"):

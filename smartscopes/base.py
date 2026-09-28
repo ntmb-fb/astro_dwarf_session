@@ -49,6 +49,9 @@ class ModelInfo:
     # empty = free numeric input.
     exposures_s: tuple[float, ...] = ()
     default_gain: int = 80
+    # Field of view in arcminutes (width, height) of the main camera, as
+    # listed by TonightPlan's scope picker; None = unknown.
+    fov_arcmin: tuple[float, float] | None = None
 
 
 @dataclass(frozen=True)
