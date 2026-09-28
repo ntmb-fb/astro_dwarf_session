@@ -40,9 +40,13 @@ def render_dashboard_section() -> None:
     devices = get_scope_manager().all()
     with ui.row().classes("items-center justify-between w-full mt-2"):
         ui.label("Other smart telescopes").classes("text-xl")
-        ui.button(icon="add", on_click=lambda: ui.navigate.to("/scopes/add")).props(
-            "flat round"
-        ).tooltip("Add a Seestar or other telescope")
+        with ui.row().classes("items-center gap-1"):
+            ui.button(icon="lock", on_click=lambda: ui.navigate.to("/scopes/https")).props(
+                "flat round"
+            ).tooltip("HTTPS for phones (install as app)")
+            ui.button(icon="add", on_click=lambda: ui.navigate.to("/scopes/add")).props(
+                "flat round"
+            ).tooltip("Add a Seestar or other telescope")
     if not devices:
         ui.label("None yet - tap + to add a Seestar.").classes("text-grey-6 text-sm")
         return

@@ -89,6 +89,34 @@ Two differences from the Dwarf runner:
 - Steps the device doesn't support (calibration, wide camera, infinite focus)
   are logged and skipped instead of failing the run.
 
+## HTTPS for phones (installable app on Android)
+
+Android Chrome only installs the app as a real full-screen app when it is
+served over HTTPS. On the dashboard, tap the **lock** icon next to *Other
+smart telescopes*, then tap **Enable HTTPS**. The page then shows two QR codes:
+
+1. **Download the certificate** onto the phone and install it once:
+   - Android: *Settings → Security & privacy → More security settings →
+     Encryption & credentials → Install a certificate → CA certificate*.
+   - iOS: install the profile, then enable it under *Settings → General →
+     About → Certificate Trust Settings*.
+2. **Open `https://<pc-ip>:8443/`** in Chrome, then use *⋮ → Install app*.
+
+How it works:
+
+- A private certificate authority (CA) signs a certificate for this PC's LAN
+  IPs and `<hostname>.local`.
+- The app reissues that certificate automatically when the IP changes, so a
+  phone only needs setting up once.
+- The CA is name-constrained to private IPs, `localhost` and `.local`. A leaked
+  CA key therefore cannot be used against real websites.
+- A small in-process TLS relay on port 8443 forwards to the normal HTTP port.
+  Plain HTTP and the desktop window are unchanged.
+- Certificates are stored in `~/.astro_dwarf_session/https/`. Set
+  `SMARTSCOPE_CERT_DIR` to use another folder, or `SMARTSCOPE_HTTPS_PORT` to
+  use another port.
+- If the PC runs a firewall, allow TCP 8443.
+
 ## Architecture
 
 ```
@@ -103,7 +131,8 @@ smartscopes/
 ├── store.py         Devices_Sessions/smartscopes.json + per-device session folders
 ├── programs.py      build/list program files (reuses upstream's program template)
 ├── coords.py        RA/Dec parsing (decimal or sexagesimal)
-├── ui/              dashboard section + /scopes/... pages
+├── https.py         private CA + auto-renewed server cert + TLS relay (port 8443)
+├── ui/              dashboard section + /scopes/... pages (incl. /scopes/https setup)
 └── tests/           fake Seestar TCP server + protocol/runner tests
 ```
 
