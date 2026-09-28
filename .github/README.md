@@ -44,12 +44,12 @@ Running the app on an always-on box means scheduled sessions don't depend on you
 
 **Requirements:**
 
-- **NAS:** Docker, e.g. a **Synology** with **Container Manager** (DSM 7.2+). That means an Intel/AMD (x86-64) or 64-bit ARM model; check Synology's Container Manager compatibility list for yours.
+- **NAS:** Docker, e.g. a **Synology** with **Container Manager** (DSM 7.2+). The ready-made image is built for Intel/AMD (x86-64) models such as the DS425+; ARM models can build from source.
 - **Telescopes:** on the **same Wi-Fi network as the NAS** (station mode). A NAS can't join a telescope's own hotspot.
 
 **Synology with the ready-made image (easiest):**
 
-GitHub builds a ready-made image for Intel/AMD and ARM NASes on every update and publishes it on Docker Hub as `<docker-hub-user>/smartscope-session` (see [Publishing the image](#publishing-the-image)).
+GitHub builds a ready-made image for Intel/AMD NASes on every update and publishes it on Docker Hub as `<docker-hub-user>/smartscope-session` (see [Publishing the image](#publishing-the-image)).
 
 1. **Download:** Container Manager → **Registry** → search `smartscope-session` → select `<docker-hub-user>/smartscope-session` → **Download**, tag `latest`.
 2. **Create the container:** Container Manager → **Image** → select it → **Run**:
@@ -86,7 +86,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 ### Publishing the image
 
-The [Docker image workflow](workflows/docker-image.yml) runs on every push to `smartscope`. It builds the image, starts it and checks the dashboard loads, then pushes it (Intel/AMD + ARM) to Docker Hub. It needs two repository secrets (**Settings → Secrets and variables → Actions**):
+The [Docker image workflow](workflows/docker-image.yml) runs on every push to `smartscope`. It builds the image, starts it and checks the dashboard loads, then pushes it (Intel/AMD) to Docker Hub. It needs two repository secrets (**Settings → Secrets and variables → Actions**):
 
 | Secret | Value |
 |---|---|

@@ -1,4 +1,4 @@
-# Builds the Smartscope Session image for Intel/AMD and ARM NASes and publishes it
+# Builds the Smartscope Session image for Intel/AMD NASes and publishes it
 # to Docker Hub as <DOCKERHUB_USERNAME>/smartscope-session.
 # Needs two repository secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN
 # (a Docker Hub personal access token with Read & Write permission).
@@ -27,7 +27,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
       # Smoke test: build for this runner, start it, and load the dashboard.
@@ -78,12 +77,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push (amd64 + arm64)
+      # Intel/AMD only (the target NAS is a DS425+). For ARM NASes add
+      # linux/arm64 here plus a docker/setup-qemu-action step above.
+      - name: Build and push (amd64)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
