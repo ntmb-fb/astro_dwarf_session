@@ -34,13 +34,13 @@ class SeestarDriver(ScopeDriver):
     models = {
         # Fields of view as listed by TonightPlan's scope picker.
         "s50": ModelInfo("s50", "Seestar S50", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                         fov_arcmin=(44, 77), image="seestar.svg"),
+                         fov_arcmin=(44, 77), image="seestar-s50.svg"),
         "s50pro": ModelInfo("s50pro", "Seestar S50 Pro", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                            fov_arcmin=(83, 147), image="seestar.svg"),
+                            fov_arcmin=(83, 147), image="seestar-s50pro.svg"),
         "s30": ModelInfo("s30", "Seestar S30", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                         fov_arcmin=(84, 148), image="seestar.svg"),
+                         fov_arcmin=(84, 148), image="seestar-s30.svg"),
         "s30pro": ModelInfo("s30pro", "Seestar S30 Pro", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                            fov_arcmin=(134, 239), image="seestar.svg"),
+                            fov_arcmin=(134, 239), image="seestar-s30pro.svg"),
     }
 
     option_fields = (
@@ -102,6 +102,7 @@ class SeestarDriver(ScopeDriver):
             charging=(pi["charger_status"] == "Charging") if "charger_status" in pi else None,
             temperature_c=pi.get("temp"),
             storage_free_mb=volumes[0].get("freeMB"),
+            storage_total_mb=volumes[0].get("totalMB"),
             firmware=str(device["firmware_ver_string"]) if "firmware_ver_string" in device else None,
             ra_hours=coord[0] if coord else None,
             dec_deg=coord[1] if coord else None,

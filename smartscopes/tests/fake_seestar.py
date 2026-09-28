@@ -102,7 +102,7 @@ class FakeSeestar:
             return self._reply(msg, {
                 "device": {"firmware_ver_int": self.firmware_ver_int, "firmware_ver_string": "fake"},
                 "pi_status": {"battery_capacity": 87, "temp": 21.5, "charger_status": "Discharging"},
-                "storage": {"storage_volume": [{"freeMB": 20480}]},
+                "storage": {"storage_volume": [{"freeMB": 20480, "totalMB": 51200}]},
             })
         if method == "scope_get_equ_coord":
             return self._reply(msg, {"ra": 5.58, "dec": -5.39})

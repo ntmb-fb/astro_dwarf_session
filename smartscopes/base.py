@@ -88,6 +88,7 @@ class ScopeStatus:
     charging: bool | None = None
     temperature_c: float | None = None
     storage_free_mb: int | None = None
+    storage_total_mb: int | None = None
     firmware: str | None = None
     ra_hours: float | None = None
     dec_deg: float | None = None
