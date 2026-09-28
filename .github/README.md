@@ -18,7 +18,7 @@ The app shows itself as **Smartscope Session** (window, browser tabs, phone inst
 Requires Python 3.10+ on Windows, macOS or Linux.
 
 ```sh
-git clone https://github.com/ntmb-fb/astro_dwarf_session.git smartscope-session
+git clone https://github.com/ntmb-fb/smartscope-session.git smartscope-session
 cd smartscope-session
 python -m venv venv
 # Windows: venv\Scripts\activate      macOS/Linux: source venv/bin/activate
