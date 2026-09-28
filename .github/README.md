@@ -1,10 +1,10 @@
 # Smartscope Session
 
-Automated imaging sessions for smart telescopes: **DWARF II / 3 / Mini** and **ZWO Seestar S50 / S30**, from one local web app on your PC, tablet or phone.
+Automated imaging sessions for smart telescopes: **DWARF II / 3 / Mini** and **ZWO Seestar S50 / S50 Pro / S30 / S30 Pro**, from one local web app on your PC, tablet or phone.
 
 This is a fork of [stevejcl/astro_dwarf_session](https://github.com/stevejcl/astro_dwarf_session). Everything that app does for Dwarfs works here unchanged; see the **[upstream README](../README.md)** for those features (pairing, live control, programs, native schedules, session explorer, Milky Way mosaic planner, watch mode). This fork adds:
 
-- **ZWO Seestar support** (S50, S30): connect, goto, autofocus, stacking, park, a program queue and a background scheduler, side by side with your Dwarfs on the same dashboard.
+- **ZWO Seestar support** (S50, S50 Pro, S30, S30 Pro): connect, goto, autofocus, stacking, park, a program queue and a background scheduler, side by side with your Dwarfs on the same dashboard.
 - **Tonight from [TonightPlan](https://tonightplan.cosmiccaptures.com/)** for Seestars *and* Dwarfs: tonight's best targets for your location and scope, ranked Showstopper → Rewarding, turned into a night of back-to-back programs in one click.
 - **HTTPS for phones**, so Android can install the app full-screen from its home screen.
 - A **driver interface** for adding other telescope brands later.
@@ -126,7 +126,7 @@ Program files use the same format as the Dwarf side. They move through `Devices_
 Builds tonight's target list from [TonightPlan](https://tonightplan.cosmiccaptures.com/) by Tim Ciasto / Cosmic Captures, using the same rules as the site itself for your location, sky and scope.
 
 - **Location:** the telescope's Site, or a Dwarf's own configured location; you can pick another in the dialog.
-- **Scope:** your model's field of view, as listed by TonightPlan (Seestar S50 44′ × 77′, S30 84′ × 148′, Dwarf 3 176′ × 99′, Dwarf II 191′ × 108′, Dwarf Mini 128′ × 72′). It decides *fits / tight fit / needs mosaic*.
+- **Scope:** your model's field of view, as listed by TonightPlan (Seestar S50 44′ × 77′, S50 Pro 83′ × 147′, S30 84′ × 148′, S30 Pro 134′ × 239′, Dwarf 3 176′ × 99′, Dwarf II 191′ × 108′, Dwarf Mini 128′ × 72′). It decides *fits / tight fit / needs mosaic*.
 - **Your sky:** City, Suburban, Rural or Dark, remembered per telescope. Targets that need darker skies are hidden, as on the site.
 - **Left out:** targets the site greys out because of the Moon, targets rated *Challenging* for smart telescopes, and anything out of season or with less than 50 minutes above 20°.
 - **Order:** Showstopper, then Rewarding, then the rest; within each group, the site's own score, with mosaic-only targets last. The first two are ticked.

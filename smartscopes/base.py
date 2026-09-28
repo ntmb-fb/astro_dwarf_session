@@ -52,6 +52,8 @@ class ModelInfo:
     # Field of view in arcminutes (width, height) of the main camera, as
     # listed by TonightPlan's scope picker; None = unknown.
     fov_arcmin: tuple[float, float] | None = None
+    # Picture shown on the dashboard card: a file in smartscopes/ui/images/.
+    image: str | None = None
 
 
 @dataclass(frozen=True)

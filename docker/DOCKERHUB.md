@@ -1,6 +1,6 @@
 # Smartscope Session
 
-Automated imaging sessions for smart telescopes: **DWARF II / 3 / Mini** and **ZWO Seestar S50 / S30**. It's one web app you run on a NAS or home server and use from any browser, phone or tablet on your network.
+Automated imaging sessions for smart telescopes: **DWARF II / 3 / Mini** and **ZWO Seestar S50 / S50 Pro / S30 / S30 Pro**. It's one web app you run on a NAS or home server and use from any browser, phone or tablet on your network.
 
 - **Mission-control dashboard:** every telescope at a glance, with connection, battery, temperature, storage and live capture progress.
 - **Programs and a background scheduler:** goto, autofocus, calibration and capture, queued for the night and started on time, with or without a browser open.

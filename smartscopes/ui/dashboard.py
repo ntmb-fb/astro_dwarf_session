@@ -7,16 +7,27 @@ from nicegui import ui
 from smartscopes.manager import ScopeDevice, get_scope_manager
 
 
+try:  # same picture size as upstream's Dwarf cards
+    from components.device_card import _LARGE_VISUAL_CLASSES as _PICTURE_CLASSES
+except ImportError:
+    _PICTURE_CLASSES = "rounded w-32 h-32 md:w-40 md:h-40"
+
+
 def _card(device: ScopeDevice) -> None:
+    model = device.driver.model
     with ui.card().classes("w-full cursor-pointer").on(
         "click", lambda: ui.navigate.to(f"/scopes/{device.uid}")
     ):
-        with ui.row().classes("items-center justify-between w-full"):
-            with ui.column().classes("gap-0"):
-                ui.label(device.entry.name).classes("text-lg")
-                ui.label(device.driver.model.display_name).classes("text-xs text-grey-6")
-            dot = ui.icon("circle").classes("text-sm")
-        detail = ui.label().classes("text-sm")
+        with ui.row().classes("flex-wrap justify-center sm:justify-start items-center gap-3 w-full"):
+            if model.image:
+                ui.image(f"/smartscope-images/{model.image}").classes(_PICTURE_CLASSES).props("fit=contain")
+            with ui.column().classes("gap-1 grow"):
+                with ui.row().classes("items-center justify-between w-full no-wrap"):
+                    with ui.column().classes("gap-0"):
+                        ui.label(device.entry.name).classes("text-lg")
+                        ui.label(model.display_name).classes("text-xs text-grey-6")
+                    dot = ui.icon("circle").classes("text-sm")
+                detail = ui.label().classes("text-sm")
 
     def refresh() -> None:
         status = device.driver.get_status()

@@ -32,10 +32,15 @@ class SeestarDriver(ScopeDriver):
     protocol_display_name = "ZWO Seestar"
     default_port = DEFAULT_PORT
     models = {
+        # Fields of view as listed by TonightPlan's scope picker.
         "s50": ModelInfo("s50", "Seestar S50", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                         fov_arcmin=(44, 77)),
+                         fov_arcmin=(44, 77), image="seestar.svg"),
+        "s50pro": ModelInfo("s50pro", "Seestar S50 Pro", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
+                            fov_arcmin=(83, 147), image="seestar.svg"),
         "s30": ModelInfo("s30", "Seestar S30", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
-                         fov_arcmin=(84, 148)),
+                         fov_arcmin=(84, 148), image="seestar.svg"),
+        "s30pro": ModelInfo("s30pro", "Seestar S30 Pro", _COMMON, exposures_s=(10, 20, 30), default_gain=80,
+                            fov_arcmin=(134, 239), image="seestar.svg"),
     }
 
     option_fields = (

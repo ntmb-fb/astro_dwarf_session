@@ -26,6 +26,9 @@ def install() -> None:
     from smartscopes.manager import get_scope_manager, scheduler_tick
     from smartscopes.ui.pages import build_pages
 
+    from pathlib import Path
+
+    app.add_static_files("/smartscope-images", str(Path(__file__).parent / "ui" / "images"))
     get_scope_manager()
     _install_https()  # before build_pages(): /scopes/https must win over /scopes/{uid}
     build_pages()
