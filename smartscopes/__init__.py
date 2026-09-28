@@ -7,7 +7,7 @@ marked "smartscopes hook":
   * pages/dashboard.py -> smartscopes.render_dashboard_section()
   * pages/programs.py  -> smartscopes.dwarf_tonightplan_button()
 
-See SMARTSCOPE.md for the architecture and how to add a new telescope.
+See .github/README.md for the architecture and how to add a new telescope.
 """
 from __future__ import annotations
 

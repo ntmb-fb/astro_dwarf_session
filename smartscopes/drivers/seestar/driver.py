@@ -42,7 +42,7 @@ class SeestarDriver(ScopeDriver):
         OptionField(
             "pem_path", "Auth key file (.pem)",
             help="Needed for Seestar firmware 7.18+. Extract it from the Seestar app "
-                 "(see SMARTSCOPE.md). Leave empty for older firmware.",
+                 "(see the README). Leave empty for older firmware.",
         ),
         OptionField(
             "verify_injection", "Send 'verify' marker", kind="bool", default=True,
