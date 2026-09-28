@@ -184,6 +184,8 @@ def build_dashboard_page() -> None:
 
             empty_label = ui.label(t("no_devices_configured")).classes("text-grey-6 text-sm")
             cards_container = ui.grid(columns=columns).classes("w-full gap-3")
+            # smartscopes hook: Seestar & other non-Dwarf telescopes (fork addition)
+            import smartscopes; smartscopes.render_dashboard_section()
 
             # dwarf_uid -> DeviceCardView, kept for the lifetime of this
             # page so poll() below can update() them in place instead of

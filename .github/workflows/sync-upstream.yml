@@ -1,0 +1,73 @@
+# Fork-only workflow: once a day, try to merge stevejcl/astro_dwarf_session
+# into the smartscope branch and open a PR (or an issue on conflict).
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    if: github.repository != 'stevejcl/astro_dwarf_session'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: smartscope
+          fetch-depth: 0
+
+      - name: Merge upstream
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/stevejcl/astro_dwarf_session.git
+          git fetch upstream NiceGui_V3_multi
+          count=$(git rev-list --count HEAD..upstream/NiceGui_V3_multi)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          [ "$count" = 0 ] && exit 0
+          branch="sync/upstream-$(git rev-parse --short upstream/NiceGui_V3_multi)"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          git switch -c "$branch"
+          if git merge --no-edit upstream/NiceGui_V3_multi; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            git diff --name-only --diff-filter=U > conflicts.txt
+          fi
+
+      - name: Run smartscopes tests
+        if: steps.merge.outputs.count != '0' && steps.merge.outputs.conflict == 'false'
+        run: |
+          pip install -r requirements-smartscopes.txt pytest
+          python -m pytest smartscopes/tests -q
+
+      - name: Open PR
+        if: steps.merge.outputs.count != '0' && steps.merge.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="${{ steps.merge.outputs.branch }}"
+          gh pr list --head "$branch" --json number --jq '.[0].number' | grep -q . && exit 0
+          git push origin "$branch"
+          gh pr create --base smartscope --head "$branch" \
+            --title "Sync upstream (${{ steps.merge.outputs.count }} commits)" \
+            --body "Automatic merge of stevejcl/astro_dwarf_session@NiceGui_V3_multi. Tests passed."
+
+      - name: Report conflict
+        if: steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Upstream sync needs a manual merge"
+          gh issue list --state open --search "$title in:title" --json number --jq '.[0].number' | grep -q . && exit 0
+          gh issue create --title "$title" --body "Conflicting files:
+          $(cat conflicts.txt)
+
+          Run \`tools/sync-upstream.sh\` locally to resolve."

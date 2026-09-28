@@ -272,6 +272,9 @@ def main() -> None:
     build_watch_dashboard_page()
     build_watch_device_page()
 
+    # smartscopes hook: Seestar & other non-Dwarf telescopes (fork addition)
+    import smartscopes; smartscopes.install()
+
     # Global, client-independent (see components/scheduler_loop.py's
     # module docstring for why app.timer, not ui.timer) - a scheduled
     # program must fire at its due time regardless of whether anyone
