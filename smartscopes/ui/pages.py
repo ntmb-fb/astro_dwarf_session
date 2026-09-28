@@ -234,8 +234,9 @@ def _program_panel(device: ScopeDevice) -> None:
                  "Programs use the same file format as the Dwarf side.").classes("text-xs text-grey-6")
 
         def open_tonightplan() -> None:
+            from smartscopes.plan_targets import DriverPlanTarget
             from smartscopes.ui.tonightplan_dialog import open_tonightplan_dialog
-            open_tonightplan_dialog(device, queue.refresh)
+            open_tonightplan_dialog(DriverPlanTarget(device), queue.refresh)
 
         ui.button("Tonight from TonightPlan", icon="auto_awesome", on_click=open_tonightplan).props("flat")
 

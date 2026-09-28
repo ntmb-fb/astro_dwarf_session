@@ -1,10 +1,11 @@
 """Support for non-Dwarf smart telescopes (ZWO Seestar, ...), kept in its
 own package so the fork stays easy to merge with upstream.
 
-The upstream code touches this package in exactly two places, both marked
-"smartscopes hook":
+The upstream code touches this package in exactly three places, all
+marked "smartscopes hook":
   * astro_dwarf_ui.py  -> smartscopes.install()
   * pages/dashboard.py -> smartscopes.render_dashboard_section()
+  * pages/programs.py  -> smartscopes.dwarf_tonightplan_button()
 
 See SMARTSCOPE.md for the architecture and how to add a new telescope.
 """
@@ -69,3 +70,16 @@ def _install_https() -> None:
     build_https_page(target)
     app.on_startup(_start)
     app.on_shutdown(https.stop_relay)
+
+
+def dwarf_tonightplan_button(session, on_added) -> None:
+    """'Tonight from TonightPlan' icon for upstream's Dwarf programs page."""
+    from nicegui import ui
+
+    def open_dialog() -> None:
+        from smartscopes.plan_targets import DwarfPlanTarget
+        from smartscopes.ui.tonightplan_dialog import open_tonightplan_dialog
+
+        open_tonightplan_dialog(DwarfPlanTarget(session), on_added)
+
+    ui.button(icon="auto_awesome", on_click=open_dialog).props("flat round").tooltip("Tonight from TonightPlan")

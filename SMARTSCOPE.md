@@ -34,10 +34,12 @@ All fork code lives in **new files**:
 - `tools/sync-upstream.sh`
 - `SMARTSCOPE.md`
 
-Upstream files are touched in only **two places**, each marked `smartscopes hook`:
+Upstream files are touched in only **three places**, each marked `smartscopes hook`:
 
 - `astro_dwarf_ui.py`: `smartscopes.install()` registers the pages and the scheduler.
 - `pages/dashboard.py`: `smartscopes.render_dashboard_section()` adds the telescope cards.
+- `pages/programs.py`: `smartscopes.dwarf_tonightplan_button()` adds the ✨ TonightPlan
+  button to the Dwarf programs page.
 
 Keep it that way. When a change seems to need an edit inside an upstream file,
 prefer calling into upstream from `smartscopes/`. If a generic improvement
@@ -81,16 +83,22 @@ required by this firmware?)".
      It is off by default, as on the Dwarf side.
    - **Manual control**: goto, autofocus, start/stop stacking, park.
 
-### Tonight from TonightPlan
+### Tonight from TonightPlan (Seestar and Dwarf)
 
-**Tonight from TonightPlan** on a telescope's page builds tonight's
+**Tonight from TonightPlan** builds tonight's
 target list from [TonightPlan](https://tonightplan.cosmiccaptures.com/), by
 Tim Ciasto / Cosmic Captures.
 
-- **Location:** the telescope's Site (latitude, longitude and time zone). You
-  can pick another Site in the dialog.
-- **Scope:** the model's field of view (Seestar S50: 44′ × 77′), used for the
-  site's own "fits / tight / needs mosaic" verdict.
+Where to find it:
+
+- **Seestar:** the button on the telescope's page.
+- **Dwarf:** the ✨ icon at the top of the Dwarf's Programs page.
+
+- **Location:** the telescope's Site, or for a Dwarf its own configured
+  location. You can pick another Site in the dialog.
+- **Scope:** the model's field of view, as listed by TonightPlan (Seestar S50
+  44′ × 77′, Dwarf 3 176′ × 99′, Dwarf II 191′ × 108′, Dwarf Mini 128′ × 72′).
+  It drives the site's own "fits / tight / needs mosaic" verdict.
 - **Your sky:** City, Suburban, Rural or Dark, remembered per telescope. It hides
   targets that need darker skies, as on the site.
 - **Left out:**
@@ -102,8 +110,17 @@ Tim Ciasto / Cosmic Captures.
 - **Selection:** the first two are ticked. Tick more or others as you like;
   *Add to queue* creates back-to-back programs in transit order. Each target's
   slot ends halfway to the next target's transit, and a target left with less
-  than 30 minutes is dropped. The LP filter is switched on for targets the site
-  recommends a dual-band or narrowband filter for.
+  than 30 minutes is dropped. A plan made mid-evening never starts in the past.
+- **Filter:** where the site recommends a dual-band or narrowband filter, the
+  Seestar switches on its LP filter and the Dwarf 3 / Mini select Duo-Band.
+  Otherwise the Dwarf uses its Astro filter.
+- **Dwarf specifics:**
+  - Programs go into the Dwarf's normal ToDo folder and are run by upstream's
+    own runner.
+  - Only the night's first program calibrates (and autofocuses, if ticked).
+  - Targets bigger than the frame use the Dwarf's built-in mosaic, with framing
+    up to 1.8 × 1.8.
+  - Each program's frame count covers its slot, and it stops at its end time.
 
 TonightPlan has no API. The catalog is read from the page (cached for a day in
 `Devices_Sessions/`, never committed) and the site's planning rules are
@@ -166,6 +183,7 @@ smartscopes/
 ├── programs.py      build/list program files (reuses upstream's program template)
 ├── coords.py        RA/Dec parsing (decimal or sexagesimal)
 ├── tonightplan.py   TonightPlan catalogue fetch + port of its planning rules
+├── plan_targets.py  per-scope adapters for the TonightPlan dialog (drivers, Dwarfs)
 ├── https.py         private CA + auto-renewed server cert + TLS relay (port 8443)
 ├── ui/              dashboard section + /scopes/... pages (incl. /scopes/https setup)
 └── tests/           fake Seestar TCP server + protocol/runner tests

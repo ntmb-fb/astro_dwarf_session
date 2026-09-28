@@ -1,20 +1,19 @@
-"""'Tonight from TonightPlan' dialog: ranked targets for this telescope's
-Site and field of view; the first two are ticked, the user adjusts, and
-the ticked ones become back-to-back programs in the queue."""
+"""'Tonight from TonightPlan' dialog: ranked targets for a telescope's
+location and field of view; the first two are ticked, the user adjusts,
+and the ticked ones become back-to-back programs in its queue. Works for
+any telescope through a PlanTarget adapter (smartscopes/plan_targets.py)."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Callable
 from zoneinfo import ZoneInfo
 
 from nicegui import run, ui
 
-from smartscopes import store, tonightplan as tp
-from smartscopes.base import Capability as C
-from smartscopes.manager import ScopeDevice
-from smartscopes.programs import new_program, save_to_todo
+from smartscopes import tonightplan as tp
+from smartscopes.plan_targets import FIT_TEXT, PlanOptions, PlanTarget, get_pref, set_pref
 
 _IMPACT_COLOR = {"Showstopper": "amber-8", "Rewarding": "positive", "Decent": "grey-7", "Subtle": "grey-6"}
-_FIT_TEXT = {"yes": "fits", "depends": "fits (orientation)", "tight": "tight fit", "no": "needs mosaic"}
 _AUTO_TICK = 2
 
 
@@ -26,40 +25,37 @@ def _local_tz_name() -> str:
         return "UTC"
 
 
-def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
-    from site_registry import get_site_entry, list_site_entries  # upstream module
-
-    driver = device.driver
-    model = driver.model
-    sites = [s for s in list_site_entries() if s.latitude is not None and s.longitude is not None]
-    site_names = [s.name for s in sites]
-    default_site = device.entry.options.get("site")
-    if default_site not in site_names:
-        default_site = site_names[0] if site_names else None
+def open_tonightplan_dialog(target: PlanTarget, on_added: Callable[[], None]) -> None:
+    locations = {loc.label: loc for loc in target.locations()}
 
     with ui.dialog() as dialog, ui.card().classes("w-full max-w-3xl"):
         with ui.row().classes("items-center justify-between w-full"):
-            ui.label("Tonight from TonightPlan").classes("text-lg")
+            ui.label(f"Tonight from TonightPlan · {target.scope_name}").classes("text-lg")
             ui.link("tonightplan.cosmiccaptures.com", tp.SITE_URL, new_tab=True).classes("text-xs")
-        if not sites:
-            ui.label("Add a Site with a location first (dashboard → 📍), then choose it in this "
-                     "telescope's settings.").classes("text-negative")
+        if not locations:
+            ui.label("No location known: add a Site with a location first (dashboard → 📍).").classes("text-negative")
             ui.button("Close", on_click=dialog.close).props("flat")
             dialog.open()
             return
 
+        default_loc = get_pref(target.uid, "tonightplan_location") or target.default_location()
+        if default_loc not in locations:
+            default_loc = next(iter(locations))
         with ui.row().classes("items-end gap-3 w-full"):
-            site_sel = ui.select(site_names, value=default_site, label="Location (Site)").classes("w-48")
+            loc_sel = ui.select(list(locations), value=default_loc, label="Location").classes("min-w-48")
             sky_sel = ui.select(list(tp.SKY_QUALITIES), label="Your sky",
-                                value=device.entry.options.get("tonightplan_sky", "Suburban")).classes("w-32")
+                                value=get_pref(target.uid, "tonightplan_sky", "Suburban")).classes("w-32")
             refresh_btn = ui.button(icon="refresh").props("flat round").tooltip("Fetch again from TonightPlan")
         summary = ui.label().classes("text-sm text-grey-7")
         body = ui.column().classes("w-full gap-1")
         with ui.row().classes("items-end gap-3 w-full"):
-            exp = (ui.select(list(model.exposures_s), value=model.exposures_s[0], label="Exposure (s)")
-                   if model.exposures_s else ui.number("Exposure (s)", value=10)).classes("w-28")
-            gain = ui.number("Gain", value=model.default_gain, format="%d").classes("w-20")
-            af = ui.checkbox("Autofocus after each goto", value=driver.supports(C.AUTOFOCUS))
+            exp = ui.select(target.exposures, value=target.default_exposure, label="Exposure (s)").classes("w-28")
+            gain = ui.number("Gain", value=target.default_gain, format="%d").classes("w-20")
+            af = ui.checkbox(target.autofocus_label, value=target.autofocus_default)
+        with ui.row().classes("gap-4"):
+            use_filter = ui.checkbox(target.filter_label, value=True) if target.filter_label else None
+            mosaic = (ui.checkbox("Mosaic for targets bigger than the frame", value=True)
+                      if target.supports_mosaic else None)
         with ui.row().classes("w-full justify-end gap-2"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             add_btn = ui.button("Add to queue")
@@ -69,8 +65,8 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
     state: dict = {"candidates": [], "checks": {}, "tz": None}
 
     async def load(force: bool = False) -> None:
-        site = get_site_entry(site_sel.value)
-        tz_name = site.timezone or _local_tz_name()
+        loc = locations[loc_sel.value]
+        tz_name = loc.tz or _local_tz_name()
         try:
             ZoneInfo(tz_name)
         except Exception:
@@ -82,8 +78,8 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
         try:
             catalogue = await run.io_bound(tp.fetch_catalogue, force=force)
             night, candidates = await run.io_bound(
-                lambda: tp.rank_tonight(catalogue, lat=site.latitude, lon=site.longitude, tz_name=tz_name,
-                                        sky=sky_sel.value, scope_fov=model.fov_arcmin))
+                lambda: tp.rank_tonight(catalogue, lat=loc.lat, lon=loc.lon, tz_name=tz_name,
+                                        sky=sky_sel.value, scope_fov=target.fov))
         except tp.TonightPlanError as exc:
             body.clear()
             with body:
@@ -92,9 +88,8 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
         state["candidates"] = candidates
         tz = state["tz"]
         dark = "darkness" if not night.twilight_tier else ("nautical twilight only", "civil twilight only")[night.twilight_tier - 1]
-        summary.set_text(f"{site.name}: {dark} {night.evening.astimezone(tz):%H:%M}–"
-                         f"{night.morning.astimezone(tz):%H:%M} · Moon {night.moon_illum}% "
-                         f"(up to {night.moon_peak_alt}°) · {len(candidates)} targets")
+        summary.set_text(f"{dark} {night.evening.astimezone(tz):%H:%M}–{night.morning.astimezone(tz):%H:%M} · "
+                         f"Moon {night.moon_illum}% (up to {night.moon_peak_alt}°) · {len(candidates)} targets")
         render()
 
     def render() -> None:
@@ -114,7 +109,7 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
                         ui.label(c.label).classes("text-sm")
                         bits = [f"{c.window_start.astimezone(tz):%H:%M}–{c.window_end.astimezone(tz):%H:%M}",
                                 f"peak {c.peak_alt:.0f}° at {c.peak_time.astimezone(tz):%H:%M}",
-                                _FIT_TEXT[c.fit], f"smart scope: {t.get('smart_scope', '?')}",
+                                FIT_TEXT[c.fit], f"smart scope: {t.get('smart_scope', '?')}",
                                 f"suggested {t.get('imaging_time', '?')}"]
                         if c.moon_status == "ok":
                             bits.append("some Moon")
@@ -127,39 +122,26 @@ def open_tonightplan_dialog(device: ScopeDevice, on_added) -> None:
             return
         slots = tp.schedule(chosen, not_before=datetime.now().astimezone() + timedelta(minutes=2))
         dropped = {c.id for c in chosen} - {c.id for c, _, _ in slots}
-        for c, start, end in slots:
-            t = c.target
-            fr = (t.get("filter_rec") or "").lower()
-            local_start = start.astimezone().replace(tzinfo=None)   # scheduler runs on this PC's clock
-            local_end = end.astimezone().replace(tzinfo=None)
-            program = new_program(
-                target=c.label, ra=t["ra_h"], dec=t["dec_d"], start=local_start,
-                exposure_s=float(exp.value), gain=int(gain.value), count=0,
-                end_time=local_end.strftime("%H:%M"), auto_focus=af.value,
-                lp_filter=driver.supports(C.LP_FILTER) and ("dual" in fr or "narrowband" in fr),
-            )
-            idc = program["command"]["id_command"]
-            idc["description"] = c.label
-            idc["tonightplan"] = {
-                "visual_impact": t["visual_impact"], "smart_scope": t.get("smart_scope"),
-                "imaging_time": t.get("imaging_time"), "fit": _FIT_TEXT[c.fit],
-                "peak_alt": c.peak_alt, "peak_time": f"{c.peak_time.astimezone(state['tz']):%H:%M}",
-                "moon_status": c.moon_status, "url": tp.SITE_URL,
-            }
-            save_to_todo(device.uid, program)
-        entry = device.entry
-        entry.options["tonightplan_sky"] = sky_sel.value
-        store.save_entry(entry)
+        opts = PlanOptions(exposure=str(exp.value), gain=int(gain.value or target.default_gain),
+                           autofocus=af.value, use_filter=bool(use_filter and use_filter.value),
+                           mosaic=bool(mosaic and mosaic.value))
+        try:
+            target.save_programs(slots, opts, state["tz"])
+        except Exception as exc:
+            ui.notify(f"Could not save programs: {exc}", type="negative", multi_line=True)
+            return
+        set_pref(target.uid, "tonightplan_sky", sky_sel.value)
+        set_pref(target.uid, "tonightplan_location", loc_sel.value)
         msg = f"Queued {len(slots)} program(s)"
         if dropped:
             msg += f"; no room left for {', '.join(sorted(dropped))}"
         ui.notify(msg, type="positive" if not dropped else "warning", multi_line=True)
-        if not device.armed:
+        if not target.is_armed():
             ui.notify("Arm the scheduler to run them automatically", type="info")
         dialog.close()
         on_added()
 
-    site_sel.on_value_change(lambda _: load())
+    loc_sel.on_value_change(lambda _: load())
     sky_sel.on_value_change(lambda _: load())
     refresh_btn.on_click(lambda: load(force=True))
     add_btn.on_click(add)

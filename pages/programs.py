@@ -115,6 +115,8 @@ def build_programs_page() -> None:
                     icon="event_note",
                     on_click=lambda: ui.navigate.to(f"/Program-{get_language()}/{dwarf_uid}", new_tab=True),
                 ).props("flat round").tooltip(t("program_page_link"))
+                # smartscopes hook: TonightPlan import (fork addition)
+                import smartscopes; smartscopes.dwarf_tonightplan_button(session, lambda: render_scripts())
             # In native mode (ui.run(native=True)) there is no address
             # bar at all - the URL's dwarf_uid, which is the ONLY thing
             # that determines which device Scripts/Results/relaunch
